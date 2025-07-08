@@ -1,0 +1,96 @@
+name: Code quality and tests
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - ".github/workflows/ci.yml"
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+  pull_request:
+    branches:
+      - main
+      - dev
+    paths:
+      - ".github/workflows/ci.yml"
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        python-version:
+          - '3.11'
+          - '3.12'
+          - '3.13'
+
+    defaults:
+      # force use bash instead of powershell because windows sucks
+      run:
+        shell: bash
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Setup mypy cache
+        uses: actions/cache@v4
+        with:
+          path: .mypy_cache
+          key: mypy-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('src/**/*.py', 'tests/**/*.py') }}
+          restore-keys: |
+            mypy-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Setup pytest cache
+        uses: actions/cache@v4
+        with:
+          path: .pytest_cache
+          key: pytest-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('tests/**/*.py') }}
+          restore-keys: |
+            pytest-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Install project dependencies
+        run: uv sync --dev
+
+      - name: Lint code
+        run: |
+          uv run ruff check --output-format=github src tests
+          uv run ruff format --check src tests
+          uv run mypy src
+
+      - name: Run tests
+        run: |
+          uv run pytest tests/ \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-branch
+
+      - name: Upload coverage data
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          flags: unittests
+          name: py-${{ matrix.python-version }}-${{ matrix.os }}
+          fail_ci_if_error: false

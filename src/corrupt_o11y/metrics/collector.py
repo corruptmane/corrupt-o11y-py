@@ -1,5 +1,3 @@
-"""Prometheus metrics collection and management."""
-
 from collections.abc import MutableMapping
 
 from prometheus_client import (
@@ -67,6 +65,36 @@ class MetricsCollector:
             self.unregister(name)
         self._metrics.clear()
 
+    def create_service_info_metric(
+        self,
+        service_name: str,
+        service_version: str,
+        instance_id: str,
+        commit_sha: str | None = None,
+        build_time: str | None = None,
+    ) -> Gauge:
+        """Create a service info metric using this collector's registry."""
+        metric = create_service_info_metric(
+            service_name=service_name,
+            service_version=service_version,
+            instance_id=instance_id,
+            commit_sha=commit_sha,
+            build_time=build_time,
+            registry=None,  # Don't auto-register
+        )
+        self.register("service_info", metric)
+        return metric
+
+    def create_service_info_metric_from_service_info(self, service_info: ServiceInfo) -> Gauge:
+        """Create a service info metric from ServiceInfo using this collector's registry."""
+        return self.create_service_info_metric(
+            service_name=service_info.name,
+            service_version=service_info.version,
+            instance_id=service_info.instance_id,
+            commit_sha=service_info.commit_sha,
+            build_time=service_info.build_time,
+        )
+
 
 def create_service_info_metric(
     service_name: str,
@@ -74,6 +102,7 @@ def create_service_info_metric(
     instance_id: str,
     commit_sha: str | None = None,
     build_time: str | None = None,
+    registry: CollectorRegistry | None = None,
 ) -> Gauge:
     """Create a service info metric following Prometheus best practices.
 
@@ -86,6 +115,7 @@ def create_service_info_metric(
         instance_id: Unique identifier for the service instance.
         commit_sha: Git commit SHA (optional).
         build_time: Build timestamp (optional).
+        registry: Prometheus registry to register the metric with (optional).
 
     Returns:
         Configured Gauge metric with service information.
@@ -116,6 +146,7 @@ def create_service_info_metric(
         "service_info",
         "Service information and build metadata",
         labelnames=list(labels.keys()),
+        registry=registry,
     )
 
     info_metric.labels(**labels).set(1)

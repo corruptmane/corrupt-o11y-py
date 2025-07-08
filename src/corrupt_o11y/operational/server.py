@@ -43,6 +43,12 @@ class OperationalServer:
 
         self._app = web.Application()
         self._runner: web.AppRunner | None = None
+        self._server_url = ""
+
+    @property
+    def server_url(self) -> str:
+        """Get the server URL."""
+        return self._server_url
 
     async def _handle_health_check(self, _: web.Request) -> web.Response:
         """Handle health check requests.
@@ -98,6 +104,21 @@ class OperationalServer:
         await self._runner.setup()
         site = web.TCPSite(self._runner, self._config.host, self._config.port)
         await site.start()
+
+        # Set server URL using actual assigned port
+        host = self._config.host if self._config.host != "0.0.0.0" else "127.0.0.1"
+
+        # Get the actual port from the server if available
+        actual_port = self._config.port
+        if (
+            actual_port == 0
+            and site._server  # noqa: SLF001
+            and hasattr(site._server, "sockets")  # noqa: SLF001
+            and site._server.sockets  # noqa: SLF001
+        ):
+            actual_port = site._server.sockets[0].getsockname()[1]  # noqa: SLF001
+
+        self._server_url = f"http://{host}:{actual_port}"
 
     async def close(self) -> None:
         """Close the operational server."""

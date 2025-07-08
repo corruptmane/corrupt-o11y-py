@@ -1,4 +1,9 @@
-# Corrupt O11y
+# corrupt o11y
+
+[![CI](https://github.com/mykyta/corrupt-o11y-py/workflows/Code%20quality%20and%20tests/badge.svg)](https://github.com/mykyta/corrupt-o11y-py/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/mykyta/corrupt-o11y-py/branch/main/graph/badge.svg)](https://codecov.io/gh/mykyta/corrupt-o11y-py)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 
 A comprehensive observability library for Python applications with logging, metrics, and tracing.
 
@@ -27,8 +32,7 @@ async def main():
     # Set up metrics
     metrics_collector = metrics.MetricsCollector()
     service_info = ServiceInfo.from_env()
-    info_metric = metrics.create_service_info_metric_from_service_info(service_info)
-    metrics_collector.register("service_info", info_metric)
+    metrics_collector.create_service_info_metric_from_service_info(service_info)
 
     # Configure tracing
     trace_config = tracing.TracingConfig.from_env()
@@ -121,9 +125,12 @@ uv sync --dev
 uv run pre-commit install
 
 # Run linting and type checking
-uv run ruff check src/
-uv run ruff format src/
-uv run mypy src/
+uv run ruff check
+uv run ruff format --check
+uv run mypy
+
+# Run tests with coverage
+uv run pytest tests/ --cov=src --cov-report=term-missing --cov-branch
 
 # Or just commit - pre-commit will run all checks automatically
 ```
