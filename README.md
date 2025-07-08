@@ -33,8 +33,8 @@ async def main():
     # Configure tracing
     trace_config = tracing.TracingConfig.from_env()
     tracer_provider = tracing.configure_tracing(
-        trace_config, 
-        service_info.name, 
+        trace_config,
+        service_info.name,
         service_info.version
     )
     tracer = tracing.get_tracer(__name__)
@@ -100,7 +100,38 @@ This provides rich metadata without increasing cardinality of other metrics.
 ## Installation
 
 ```bash
+# With uv (recommended)
+uv add corrupt-o11y
+```
+
+```bash
+# With pip
 pip install corrupt-o11y
+```
+
+## Development
+
+For contributors (using [uv](https://docs.astral.sh/uv/) as recommended package manager):
+
+```bash
+# Install with development dependencies
+uv sync --dev
+
+# Install pre-commit hooks
+uv run pre-commit install
+
+# Run linting and type checking
+uv run ruff check src/
+uv run ruff format src/
+uv run mypy src/
+
+# Or just commit - pre-commit will run all checks automatically
+```
+
+With pip:
+```bash
+pip install -e ".[dev]"
+pre-commit install
 ```
 
 ## Requirements
