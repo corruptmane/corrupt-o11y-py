@@ -1,0 +1,116 @@
+# Corrupt O11y
+
+A comprehensive observability library for Python applications with logging, metrics, and tracing.
+
+## Features
+
+- **Structured Logging** - JSON-formatted logs with OpenTelemetry trace correlation
+- **Prometheus Metrics** - Built-in collectors for GC, platform, and process metrics
+- **OpenTelemetry Tracing** - Multiple exporters (OTLP HTTP/gRPC, console)
+- **Operational Endpoints** - Health checks, metrics, and service info HTTP server
+- **Service Metadata** - Centralized service information management
+- **Type Safe** - Strict type checking with mypy
+
+## Quick Start
+
+```python
+from corrupt_o11y import logging, metrics, tracing
+from corrupt_o11y.operational import Status, OperationalServerConfig, OperationalServer
+from corrupt_o11y.metadata import ServiceInfo
+
+async def main():
+    # Configure logging
+    log_config = logging.LoggingConfig.from_env()
+    logging.configure_logging(log_config)
+    logger = logging.get_logger(__name__)
+
+    # Set up metrics
+    metrics_collector = metrics.MetricsCollector()
+    service_info = ServiceInfo.from_env()
+    info_metric = metrics.create_service_info_metric_from_service_info(service_info)
+    metrics_collector.register("service_info", info_metric)
+
+    # Configure tracing
+    trace_config = tracing.TracingConfig.from_env()
+    tracer_provider = tracing.configure_tracing(
+        trace_config, 
+        service_info.name, 
+        service_info.version
+    )
+    tracer = tracing.get_tracer(__name__)
+
+    # Set up operational server
+    status = Status()
+    op_config = OperationalServerConfig.from_env()
+    server = OperationalServer(op_config, service_info.asdict(), status, metrics_collector)
+    await server.start()
+    status.is_ready = True
+
+    # Use observability features
+    logger.info("Service started", extra={"port": 8080})
+
+    with tracer.start_as_current_span("process_request"):
+        # Your business logic here
+        logger.info("Processing request")
+```
+
+## Configuration
+
+All components are configured via environment variables:
+
+### Logging
+- `LOG_LEVEL` - Log level (default: INFO)
+- `LOG_AS_JSON` - Output JSON format (default: false)
+- `LOG_TRACING` - Include trace information (default: false)
+
+### Tracing
+- `TRACING_EXPORTER_TYPE` - Exporter type: stdout, http, grpc (default: stdout)
+- `TRACING_EXPORTER_ENDPOINT` - OTLP endpoint URL (required for http/grpc)
+
+### Operational Server
+- `OPERATIONAL_HOST` - Bind address (default: 0.0.0.0)
+- `OPERATIONAL_PORT` - Port number (default: 42069)
+
+### Service Metadata
+- `SERVICE_NAME` - Service name (default: unknown-dev)
+- `SERVICE_VERSION` - Service version (default: dev)
+- `INSTANCE_ID` - Instance identifier (default: unknown-dev)
+- `COMMIT_SHA` - Git commit SHA (default: unknown-dev)
+- `BUILD_TIME` - Build timestamp (default: unknown-dev)
+
+## Endpoints
+
+The operational server provides:
+
+- `GET /health` - Liveness check (200 if alive)
+- `GET /ready` - Readiness check (200 if ready)
+- `GET /metrics` - Prometheus metrics
+- `GET /info` - Service information JSON
+
+## Service Info Metric
+
+Following Prometheus best practices, service metadata is exposed as an info metric:
+
+```prometheus
+service_info{service="my-service", version="1.2.3", instance="pod-123", commit="abc123"} 1
+```
+
+This provides rich metadata without increasing cardinality of other metrics.
+
+## Installation
+
+```bash
+pip install corrupt-o11y
+```
+
+## Requirements
+
+- Python 3.11+
+- OpenTelemetry
+- Prometheus Client
+- structlog
+- aiohttp
+
+## License
+
+MIT

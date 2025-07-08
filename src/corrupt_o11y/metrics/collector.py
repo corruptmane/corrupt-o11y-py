@@ -1,0 +1,148 @@
+"""Prometheus metrics collection and management."""
+
+from collections.abc import MutableMapping
+
+from prometheus_client import (
+    GC_COLLECTOR,
+    PLATFORM_COLLECTOR,
+    PROCESS_COLLECTOR,
+    CollectorRegistry,
+    Gauge,
+)
+from prometheus_client.registry import Collector
+
+from corrupt_o11y.metadata import ServiceInfo
+
+
+class MetricsCollector:
+    """Prometheus metrics collector with automatic built-in metrics.
+
+    Provides a centralized registry for Prometheus metrics with built-in
+    garbage collection, platform, and process metrics.
+    """
+
+    def __init__(self) -> None:
+        """Initialize metrics collector."""
+        self._registry = CollectorRegistry()
+        self._metrics: MutableMapping[str, Collector] = {}
+
+        self._registry.register(GC_COLLECTOR)
+        self._registry.register(PLATFORM_COLLECTOR)
+        self._registry.register(PROCESS_COLLECTOR)
+
+    def register(self, name: str, collector: Collector) -> None:
+        """Register a metric collector.
+
+        Args:
+            name: Name to identify the collector.
+            collector: Prometheus collector instance.
+        """
+        self._registry.register(collector)
+        self._metrics[name] = collector
+
+    def unregister(self, name: str) -> None:
+        """Unregister a metric collector.
+
+        Args:
+            name: Name of the collector to unregister.
+        """
+        if collector := self._metrics.pop(name, None):
+            self._registry.unregister(collector)
+
+    @property
+    def registry(self) -> CollectorRegistry:
+        """Get the underlying Prometheus registry.
+
+        Returns:
+            Prometheus collector registry.
+        """
+        return self._registry
+
+    def clear(self) -> None:
+        """Clear all custom registered metrics.
+
+        Built-in metrics (GC, platform, process) are not cleared.
+        """
+        for name in list(self._metrics.keys()):
+            self.unregister(name)
+        self._metrics.clear()
+
+
+def create_service_info_metric(
+    service_name: str,
+    service_version: str,
+    instance_id: str,
+    commit_sha: str | None = None,
+    build_time: str | None = None,
+) -> Gauge:
+    """Create a service info metric following Prometheus best practices.
+
+    Creates a metric with value 1 that carries service metadata as labels.
+    This is the standard pattern for exposing build and deployment information.
+
+    Args:
+        service_name: Name of the service.
+        service_version: Version of the service.
+        instance_id: Unique identifier for the service instance.
+        commit_sha: Git commit SHA (optional).
+        build_time: Build timestamp (optional).
+
+    Returns:
+        Configured Gauge metric with service information.
+
+    Example:
+        >>> info_metric = create_service_info_metric(
+        ...     service_name="my-service",
+        ...     service_version="1.2.3",
+        ...     instance_id="pod-123",
+        ...     commit_sha="abc123",
+        ...     build_time="2023-01-01T10:00:00Z"
+        ... )
+        >>> # Results in: service_info{service="my-service", version="1.2.3", ...} 1
+    """
+    # Build label names and values, filtering out None values
+    labels = {
+        "service": service_name,
+        "version": service_version,
+        "instance": instance_id,
+    }
+
+    if commit_sha is not None:
+        labels["commit"] = commit_sha
+    if build_time is not None:
+        labels["build_time"] = build_time
+
+    info_metric = Gauge(
+        "service_info",
+        "Service information and build metadata",
+        labelnames=list(labels.keys()),
+    )
+
+    info_metric.labels(**labels).set(1)
+    return info_metric
+
+
+def create_service_info_metric_from_service_info(service_info: ServiceInfo) -> Gauge:
+    """Create a service info metric from ServiceInfo instance.
+
+    Convenience function that extracts metadata from ServiceInfo and creates
+    the standard service_info metric.
+
+    Args:
+        service_info: ServiceInfo instance containing service metadata.
+
+    Returns:
+        Configured Gauge metric with service information.
+
+    Example:
+        >>> from corrupt_o11y.metadata import ServiceInfo
+        >>> service = ServiceInfo.from_env()
+        >>> info_metric = create_service_info_metric_from_service_info(service)
+    """
+    return create_service_info_metric(
+        service_name=service_info.name,
+        service_version=service_info.version,
+        instance_id=service_info.instance_id,
+        commit_sha=service_info.commit_sha if service_info.commit_sha != "unknown-dev" else None,
+        build_time=service_info.build_time if service_info.build_time != "unknown-dev" else None,
+    )
