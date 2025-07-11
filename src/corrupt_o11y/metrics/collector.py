@@ -1,11 +1,14 @@
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Sequence
 
 from prometheus_client import (
     GC_COLLECTOR,
     PLATFORM_COLLECTOR,
     PROCESS_COLLECTOR,
     CollectorRegistry,
+    Counter,
     Gauge,
+    Histogram,
+    Summary,
 )
 from prometheus_client.registry import Collector
 
@@ -105,6 +108,133 @@ class MetricsCollector:
             commit_sha=service_info.commit_sha,
             build_time=service_info.build_time,
         )
+
+    def create_counter(
+        self,
+        name: str,
+        documentation: str,
+        labelnames: list[str] | None = None,
+        unit: str = "",
+    ) -> Counter:
+        """Create a Counter metric and register it with this collector.
+
+        Args:
+            name: Name of the metric.
+            documentation: Help text for the metric.
+            labelnames: List of label names for the metric.
+            unit: Unit of measurement (optional).
+
+        Returns:
+            Counter metric instance.
+        """
+        metric_name = f"{self._config.metric_prefix}{name}"
+        if unit:
+            metric_name = f"{metric_name}_{unit}"
+
+        counter = Counter(
+            metric_name,
+            documentation,
+            labelnames=labelnames or [],
+            registry=None,
+        )
+        self.register(name, counter)
+        return counter
+
+    def create_gauge(
+        self,
+        name: str,
+        documentation: str,
+        labelnames: list[str] | None = None,
+        unit: str = "",
+    ) -> Gauge:
+        """Create a Gauge metric and register it with this collector.
+
+        Args:
+            name: Name of the metric.
+            documentation: Help text for the metric.
+            labelnames: List of label names for the metric.
+            unit: Unit of measurement (optional).
+
+        Returns:
+            Gauge metric instance.
+        """
+        metric_name = f"{self._config.metric_prefix}{name}"
+        if unit:
+            metric_name = f"{metric_name}_{unit}"
+
+        gauge = Gauge(
+            metric_name,
+            documentation,
+            labelnames=labelnames or [],
+            registry=None,
+        )
+        self.register(name, gauge)
+        return gauge
+
+    def create_histogram(
+        self,
+        name: str,
+        documentation: str,
+        labelnames: list[str] | None = None,
+        buckets: Sequence[float | str] = Histogram.DEFAULT_BUCKETS,
+        unit: str = "",
+    ) -> Histogram:
+        """Create a Histogram metric and register it with this collector.
+
+        Args:
+            name: Name of the metric.
+            documentation: Help text for the metric.
+            labelnames: List of label names for the metric.
+            buckets: Histogram buckets (optional, uses default if None).
+            unit: Unit of measurement (optional).
+
+        Returns:
+            Histogram metric instance.
+        """
+        metric_name = f"{self._config.metric_prefix}{name}"
+        if unit:
+            metric_name = f"{metric_name}_{unit}"
+
+        histogram = Histogram(
+            name=metric_name,
+            documentation=documentation,
+            labelnames=labelnames or [],
+            registry=None,
+            buckets=buckets,
+        )
+        self.register(name, histogram)
+        return histogram
+
+    def create_summary(
+        self,
+        name: str,
+        documentation: str,
+        labelnames: list[str] | None = None,
+        unit: str = "",
+    ) -> Summary:
+        """Create a Summary metric and register it with this collector.
+
+        Args:
+            name: Name of the metric.
+            documentation: Help text for the metric.
+            labelnames: List of label names for the metric.
+            unit: Unit of measurement (optional).
+
+        Returns:
+            Summary metric instance.
+        """
+        metric_name = f"{self._config.metric_prefix}{name}"
+        if unit:
+            metric_name = f"{metric_name}_{unit}"
+
+        summary = Summary(
+            metric_name,
+            documentation,
+            labelnames=labelnames or [],
+            registry=None,
+        )
+        self.register(name, summary)
+        return summary
 
 
 def create_service_info_metric(

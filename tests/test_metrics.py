@@ -1,4 +1,4 @@
-from prometheus_client import Counter, Gauge
+from prometheus_client import Counter, Gauge, Histogram, Summary
 
 from corrupt_o11y.metadata import ServiceInfo
 from corrupt_o11y.metrics import (
@@ -191,6 +191,72 @@ class TestMetricsCollector:
 
         assert isinstance(metric, Gauge)
         assert "service_info" in collector._metrics
+
+    def test_create_counter(self):
+        """Test creating counter metric."""
+        collector = MetricsCollector()
+
+        counter = collector.create_counter(
+            "http_requests", "Total HTTP requests", labelnames=["method", "status"]
+        )
+
+        assert isinstance(counter, Counter)
+        assert "http_requests" in collector._metrics
+        assert counter._name == "http_requests"
+
+    def test_create_counter_with_prefix_and_unit(self):
+        """Test creating counter with prefix and unit."""
+        config = MetricsConfig(metric_prefix="myapp_")
+        collector = MetricsCollector(config)
+
+        counter = collector.create_counter("requests", "Total requests", unit="total")
+
+        assert counter._name == "myapp_requests"
+
+    def test_create_gauge(self):
+        """Test creating gauge metric."""
+        collector = MetricsCollector()
+
+        gauge = collector.create_gauge(
+            "queue_size", "Current queue size", labelnames=["queue_name"]
+        )
+
+        assert isinstance(gauge, Gauge)
+        assert "queue_size" in collector._metrics
+
+    def test_create_histogram(self):
+        """Test creating histogram metric."""
+        collector = MetricsCollector()
+
+        histogram = collector.create_histogram(
+            "request_duration",
+            "Request duration in seconds",
+            labelnames=["endpoint"],
+            buckets=(0.1, 0.5, 1.0, 5.0),
+        )
+
+        assert isinstance(histogram, Histogram)
+        assert "request_duration" in collector._metrics
+
+    def test_create_histogram_default_buckets(self):
+        """Test creating histogram with default buckets."""
+        collector = MetricsCollector()
+
+        histogram = collector.create_histogram("response_time", "Response time in seconds")
+
+        assert isinstance(histogram, Histogram)
+        assert "response_time" in collector._metrics
+
+    def test_create_summary(self):
+        """Test creating summary metric."""
+        collector = MetricsCollector()
+
+        summary = collector.create_summary(
+            "request_size", "Request size in bytes", labelnames=["method"]
+        )
+
+        assert isinstance(summary, Summary)
+        assert "request_size" in collector._metrics
 
 
 class TestServiceInfoMetricFunctions:
