@@ -159,12 +159,24 @@ known-first-party = ["corrupt_o11y"]
     "S101",      # Use of assert detected (expected in tests)
     "ANN201",    # Missing return type annotation for public function
     "ANN001",    # Missing type annotation for function argument
+    "ANN002",    # Missing type annotation for *args
+    "ANN003",    # Missing type annotation for **kwargs
+    "ANN202",    # Missing return type annotation for private function
+    "ARG001",    # Unused function argument
+    "ARG002",    # Unused method argument
     "D100",      # Missing docstring in public module
     "D101",      # Missing docstring in public class
     "D102",      # Missing docstring in public method
     "D103",      # Missing docstring in public function
     "PLR0913",   # Too many arguments to function call
     "PLR0915",   # Too many statements
+    "FBT003",    # Boolean positional value in function call
+    "TRY301",    # Abstract `raise` to an inner function
+    "TRY003",    # Avoid specifying long messages outside the exception class
+    "EM101",     # Exception must not use a string literal
+    "BLE001",    # Do not catch blind exception
+    "PLC0415",   # import should be at the top-level
+    "S105",      # Possible hardcoded password
 ]
 
 [tool.ruff.format]
@@ -207,6 +219,13 @@ disallow_incomplete_defs = false
 disallow_untyped_decorators = false
 warn_return_any = false
 disallow_any_explicit = false
+disallow_untyped_calls = false
+warn_unreachable = false
+
+# Ignore processor return types in tests - they are complex union types
+[[tool.mypy.overrides]]
+module = "tests.test_logging_processors"
+disable_error_code = ["call-overload", "index", "assignment", "comparison-overlap"]
 
 # Pytest configuration
 [tool.pytest.ini_options]

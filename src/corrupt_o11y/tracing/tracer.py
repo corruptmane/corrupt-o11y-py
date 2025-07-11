@@ -1,4 +1,4 @@
-from typing import assert_never
+from typing import assert_never, cast
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
@@ -53,12 +53,23 @@ def configure_tracing(
             if not cfg.endpoint:
                 msg = "HTTP exporter requires an endpoint"
                 raise TracingError(msg)
-            exporter = OTLPHttpExporter(cfg.endpoint)
+
+            exporter = OTLPHttpExporter(
+                endpoint=cfg.endpoint,
+                timeout=cfg.timeout,
+                headers=cast("dict[str, str]", cfg.headers),
+            )
         case ExportType.GRPC:
             if not cfg.endpoint:
                 msg = "GRPC exporter requires an endpoint"
                 raise TracingError(msg)
-            exporter = OTLPGrpcExporter(cfg.endpoint, insecure=True)
+
+            exporter = OTLPGrpcExporter(
+                endpoint=cfg.endpoint,
+                insecure=cfg.insecure,
+                timeout=cfg.timeout,
+                headers=cast("dict[str, str]", cfg.headers),
+            )
         case _:
             assert_never(cfg.export_type)
 

@@ -38,7 +38,7 @@ class ServiceInfo:
         """
         return cls(
             name=os.environ.get("SERVICE_NAME", "unknown-dev"),
-            version=os.environ.get("SERVICE_VERSION", "dev"),
+            version=os.environ.get("SERVICE_VERSION", "unknown-dev"),
             instance_id=os.environ.get("INSTANCE_ID", "unknown-dev"),
             commit_sha=os.environ.get("COMMIT_SHA", "unknown-dev"),
             build_time=os.environ.get("BUILD_TIME", "unknown-dev"),

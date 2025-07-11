@@ -1,8 +1,8 @@
+from .collector import LoggingCollector, ProcessorChain
 from .config import LoggingConfig
-from .logger import configure_logging, get_logger
 
 __all__ = [
+    "LoggingCollector",
     "LoggingConfig",
-    "configure_logging",
-    "get_logger",
+    "ProcessorChain",
 ]

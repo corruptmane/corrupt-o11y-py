@@ -106,7 +106,7 @@ class OperationalServer:
         await site.start()
 
         # Set server URL using actual assigned port
-        host = self._config.host if self._config.host != "0.0.0.0" else "127.0.0.1"
+        host = self._config.host if self._config.host != "0.0.0.0" else ""
 
         # Get the actual port from the server if available
         actual_port = self._config.port

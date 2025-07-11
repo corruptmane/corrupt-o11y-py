@@ -11,22 +11,33 @@ from prometheus_client.registry import Collector
 
 from corrupt_o11y.metadata import ServiceInfo
 
+from .config import MetricsConfig
+
 
 class MetricsCollector:
-    """Prometheus metrics collector with automatic built-in metrics.
+    """Prometheus metrics collector with configurable built-in metrics.
 
-    Provides a centralized registry for Prometheus metrics with built-in
+    Provides a centralized registry for Prometheus metrics with optional
     garbage collection, platform, and process metrics.
     """
 
-    def __init__(self) -> None:
-        """Initialize metrics collector."""
+    def __init__(self, config: MetricsConfig | None = None) -> None:
+        """Initialize metrics collector.
+
+        Args:
+            config: Configuration for metrics collection. If None, uses defaults.
+        """
+        self._config = config or MetricsConfig()
         self._registry = CollectorRegistry()
         self._metrics: MutableMapping[str, Collector] = {}
 
-        self._registry.register(GC_COLLECTOR)
-        self._registry.register(PLATFORM_COLLECTOR)
-        self._registry.register(PROCESS_COLLECTOR)
+        # Register built-in collectors based on configuration
+        if self._config.enable_gc_collector:
+            self._registry.register(GC_COLLECTOR)
+        if self._config.enable_platform_collector:
+            self._registry.register(PLATFORM_COLLECTOR)
+        if self._config.enable_process_collector:
+            self._registry.register(PROCESS_COLLECTOR)
 
     def register(self, name: str, collector: Collector) -> None:
         """Register a metric collector.
