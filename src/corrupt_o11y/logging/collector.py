@@ -4,6 +4,7 @@ from typing import Any, Self
 
 import orjson
 import structlog
+from structlog.stdlib import BoundLogger
 from structlog.typing import Processor
 
 from .config import LoggingConfig
@@ -285,7 +286,11 @@ class LoggingCollector:
         # Configure structlog
         structlog.configure(
             processors=common_processors + structlog_processors,
-            logger_factory=structlog.WriteLoggerFactory(),
+            logger_factory=structlog.stdlib.LoggerFactory(),
             wrapper_class=structlog.make_filtering_bound_logger(self._config.level),
             cache_logger_on_first_use=True,
         )
+
+
+def get_logger(name: str) -> BoundLogger:
+    return structlog.stdlib.get_logger(name)
