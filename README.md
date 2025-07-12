@@ -1,7 +1,7 @@
 # corrupt o11y
 
 [![CI](https://github.com/corruptmane/corrupt-o11y-py/actions/workflows/ci.yml/badge.svg)](https://github.com/corruptmane/corrupt-o11y-py/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/mykyta/corrupt-o11y-py/branch/main/graph/badge.svg)](https://codecov.io/gh/mykyta/corrupt-o11y-py)
+[![codecov](https://codecov.io/github/corruptmane/corrupt-o11y-py/branch/dev/graph/badge.svg?token=IO92GT0TEH)](https://codecov.io/github/corruptmane/corrupt-o11y-py)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 
