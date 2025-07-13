@@ -70,7 +70,7 @@ jobs:
             pytest-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Install project dependencies
-        run: uv sync --dev
+        run: uv sync --dev --all-extras
 
       - name: Lint code
         run: |

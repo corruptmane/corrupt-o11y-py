@@ -135,7 +135,7 @@ class TestConfigureTracing:
 
     @patch("corrupt_o11y.tracing.tracer.trace.set_tracer_provider")
     @patch("corrupt_o11y.tracing.tracer.Resource")
-    @patch("corrupt_o11y.tracing.tracer.OTLPHttpExporter")
+    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.OTLPSpanExporter")
     def test_configure_http_tracing(
         self, mock_http_exporter, mock_resource, mock_set_tracer_provider
     ):
@@ -161,7 +161,7 @@ class TestConfigureTracing:
 
     @patch("corrupt_o11y.tracing.tracer.trace.set_tracer_provider")
     @patch("corrupt_o11y.tracing.tracer.Resource")
-    @patch("corrupt_o11y.tracing.tracer.OTLPGrpcExporter")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter")
     def test_configure_grpc_tracing(
         self, mock_grpc_exporter, mock_resource, mock_set_tracer_provider
     ):

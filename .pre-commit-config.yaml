@@ -16,9 +16,9 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.12.3
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: ["--config", "pyproject.toml", "--fix"]
       - id: ruff-format
         args: ["--config", "pyproject.toml"]
@@ -31,12 +31,12 @@ repos:
           - types-orjson>=3.6.2
           - pytest>=8.4.1
           - pytest-asyncio>=1.0.0
-          - aiohttp>=3.12.13
-          - opentelemetry-api>=1.34.1
-          - opentelemetry-exporter-otlp-proto-grpc>=1.34.1
-          - opentelemetry-exporter-otlp-proto-http>=1.34.1
-          - opentelemetry-sdk>=1.34.1
-          - orjson>=3.10.18
-          - prometheus-client>=0.22.1
-          - structlog>=25.4.0
+          - aiohttp>=3.9.0
+          - opentelemetry-api>=1.20.0
+          - opentelemetry-exporter-otlp-proto-grpc>=1.20.0
+          - opentelemetry-exporter-otlp-proto-http>=1.20.0
+          - opentelemetry-sdk>=1.20.0
+          - orjson>=3.8.0
+          - prometheus-client>=0.20.0
+          - structlog>=23.3.0
         args: ["--config-file", "pyproject.toml"]
