@@ -114,7 +114,6 @@ class MetricsCollector:
         name: str,
         documentation: str,
         labelnames: list[str] | None = None,
-        unit: str = "",
     ) -> Counter:
         """Create a Counter metric and register it with this collector.
 
@@ -122,14 +121,11 @@ class MetricsCollector:
             name: Name of the metric.
             documentation: Help text for the metric.
             labelnames: List of label names for the metric.
-            unit: Unit of measurement (optional).
 
         Returns:
             Counter metric instance.
         """
         metric_name = f"{self._config.metric_prefix}{name}"
-        if unit:
-            metric_name = f"{metric_name}_{unit}"
 
         counter = Counter(
             metric_name,
@@ -145,7 +141,6 @@ class MetricsCollector:
         name: str,
         documentation: str,
         labelnames: list[str] | None = None,
-        unit: str = "",
     ) -> Gauge:
         """Create a Gauge metric and register it with this collector.
 
@@ -153,14 +148,11 @@ class MetricsCollector:
             name: Name of the metric.
             documentation: Help text for the metric.
             labelnames: List of label names for the metric.
-            unit: Unit of measurement (optional).
 
         Returns:
             Gauge metric instance.
         """
         metric_name = f"{self._config.metric_prefix}{name}"
-        if unit:
-            metric_name = f"{metric_name}_{unit}"
 
         gauge = Gauge(
             metric_name,
@@ -177,7 +169,6 @@ class MetricsCollector:
         documentation: str,
         labelnames: list[str] | None = None,
         buckets: Sequence[float | str] = Histogram.DEFAULT_BUCKETS,
-        unit: str = "",
     ) -> Histogram:
         """Create a Histogram metric and register it with this collector.
 
@@ -186,14 +177,11 @@ class MetricsCollector:
             documentation: Help text for the metric.
             labelnames: List of label names for the metric.
             buckets: Histogram buckets (optional, uses default if None).
-            unit: Unit of measurement (optional).
 
         Returns:
             Histogram metric instance.
         """
         metric_name = f"{self._config.metric_prefix}{name}"
-        if unit:
-            metric_name = f"{metric_name}_{unit}"
 
         histogram = Histogram(
             name=metric_name,
@@ -210,7 +198,6 @@ class MetricsCollector:
         name: str,
         documentation: str,
         labelnames: list[str] | None = None,
-        unit: str = "",
     ) -> Summary:
         """Create a Summary metric and register it with this collector.
 
@@ -218,14 +205,11 @@ class MetricsCollector:
             name: Name of the metric.
             documentation: Help text for the metric.
             labelnames: List of label names for the metric.
-            unit: Unit of measurement (optional).
 
         Returns:
             Summary metric instance.
         """
         metric_name = f"{self._config.metric_prefix}{name}"
-        if unit:
-            metric_name = f"{metric_name}_{unit}"
 
         summary = Summary(
             metric_name,
