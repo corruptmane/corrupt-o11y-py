@@ -2,13 +2,18 @@ from collections.abc import Mapping
 from typing import Any
 
 import orjson
-from aiohttp import web
 from prometheus_client import generate_latest
 
-from corrupt_o11y.metrics import MetricsCollector
+from corrupt_o11y._internal.dependencies import check_aiohttp
 
-from .config import OperationalServerConfig
-from .status import Status
+# Check for aiohttp availability
+check_aiohttp()
+from aiohttp import web  # noqa: E402
+
+from corrupt_o11y.metrics import MetricsCollector  # noqa: E402
+
+from .config import OperationalServerConfig  # noqa: E402
+from .status import Status  # noqa: E402
 
 
 class OperationalServer:

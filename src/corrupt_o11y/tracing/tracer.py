@@ -1,19 +1,25 @@
 from typing import assert_never, cast
 
-from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter as OTLPGrpcExporter,
+from corrupt_o11y._internal.dependencies import (
+    check_opentelemetry,
+    check_opentelemetry_grpc_exporter,
+    check_opentelemetry_http_exporter,
 )
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter as OTLPHttpExporter,
-)
-from opentelemetry.propagate import set_global_textmap
-from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 from .config import ExportType, TracingConfig
+
+# Check for OpenTelemetry availability
+check_opentelemetry()
+from opentelemetry import trace  # noqa: E402
+from opentelemetry.propagate import set_global_textmap  # noqa: E402
+from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource  # noqa: E402
+from opentelemetry.sdk.trace import TracerProvider  # noqa: E402
+from opentelemetry.sdk.trace.export import (  # noqa: E402
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+    SpanExporter,
+)
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator  # noqa: E402
 
 
 class TracingError(ValueError):
@@ -45,14 +51,20 @@ def configure_tracing(
         },
     )
 
-    exporter: ConsoleSpanExporter | OTLPHttpExporter | OTLPGrpcExporter
+    exporter: SpanExporter
     match cfg.export_type:
         case ExportType.STDOUT:
             exporter = ConsoleSpanExporter()
         case ExportType.HTTP:
+            check_opentelemetry_http_exporter()
+
             if not cfg.endpoint:
                 msg = "HTTP exporter requires an endpoint"
                 raise TracingError(msg)
+
+            from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # noqa: PLC0415
+                OTLPSpanExporter as OTLPHttpExporter,
+            )
 
             exporter = OTLPHttpExporter(
                 endpoint=cfg.endpoint,
@@ -60,9 +72,15 @@ def configure_tracing(
                 headers=cast("dict[str, str]", cfg.headers),
             )
         case ExportType.GRPC:
+            check_opentelemetry_grpc_exporter()
+
             if not cfg.endpoint:
                 msg = "GRPC exporter requires an endpoint"
                 raise TracingError(msg)
+
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # noqa: PLC0415
+                OTLPSpanExporter as OTLPGrpcExporter,
+            )
 
             exporter = OTLPGrpcExporter(
                 endpoint=cfg.endpoint,

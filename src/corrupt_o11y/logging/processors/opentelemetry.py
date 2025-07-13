@@ -1,6 +1,11 @@
 import structlog
-from opentelemetry import trace
 from structlog.typing import WrappedLogger
+
+from corrupt_o11y._internal.dependencies import check_opentelemetry
+
+# Check for OpenTelemetry availability
+check_opentelemetry()
+from opentelemetry import trace  # noqa: E402
 
 
 def add_open_telemetry_spans(

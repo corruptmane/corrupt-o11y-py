@@ -3,12 +3,16 @@ from collections.abc import Callable, Iterator
 from typing import Any, Self
 
 import orjson
-import structlog
-from structlog.stdlib import BoundLogger
-from structlog.typing import Processor
 
-from .config import LoggingConfig
-from .processors import (
+from corrupt_o11y._internal.dependencies import check_structlog
+
+# Check for structlog availability
+check_structlog()
+import structlog  # noqa: E402
+from structlog.typing import Processor  # noqa: E402
+
+from .config import LoggingConfig  # noqa: E402
+from .processors import (  # noqa: E402
     EnhancedExceptionProcessor,
     add_open_telemetry_spans,
     make_processor_chain_safe,
@@ -292,5 +296,5 @@ class LoggingCollector:
         )
 
 
-def get_logger(name: str) -> BoundLogger:
+def get_logger(name: str) -> structlog.stdlib.BoundLogger:
     return structlog.stdlib.get_logger(name)

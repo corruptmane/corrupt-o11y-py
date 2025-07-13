@@ -9,5 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
+# uv lock file (excluded for library development)
+uv.lock
+
 # Code coverage
 .coverage
