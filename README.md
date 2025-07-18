@@ -69,6 +69,7 @@ All components are configured via environment variables:
 - `LOG_TRACING` - Include trace information (default: false)
 
 ### Tracing
+- `TRACING_ENABLED` - Enable tracing (default: true)
 - `TRACING_EXPORTER_TYPE` - Exporter type: stdout, http, grpc (default: stdout)
 - `TRACING_EXPORTER_ENDPOINT` - OTLP endpoint URL (required for http/grpc)
 - `TRACING_INSECURE` - Use insecure connection (default: false)
