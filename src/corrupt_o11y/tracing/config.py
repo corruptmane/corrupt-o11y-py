@@ -20,6 +20,7 @@ class TracingConfig:
     """Configuration for OpenTelemetry tracing.
 
     Attributes:
+        enabled: Whether tracing is enabled (default: True).
         export_type: Type of exporter.
         endpoint: Endpoint URL for remote exporters.
         insecure: Whether to use insecure connections (default: False for production safety).
@@ -29,6 +30,7 @@ class TracingConfig:
 
     export_type: ExportType
     endpoint: str
+    enabled: bool = True
     insecure: bool = False
     timeout: int = 30
     headers: Mapping[str, str] | None = None
@@ -41,6 +43,7 @@ class TracingConfig:
             headers: Additional headers for HTTP/GRPC exporters.
 
         Environment variables:
+            TRACING_ENABLED: Whether tracing is enabled (default: true).
             TRACING_EXPORTER_TYPE: Type of exporter (default: stdout).
             TRACING_EXPORTER_ENDPOINT: Endpoint URL for remote exporters.
             TRACING_INSECURE: Whether to use insecure connections (default: false).
@@ -73,6 +76,7 @@ class TracingConfig:
         return cls(
             export_type=export_type,
             endpoint=os.environ.get("TRACING_EXPORTER_ENDPOINT", ""),
+            enabled=env_bool("TRACING_ENABLED", "true"),
             insecure=env_bool("TRACING_INSECURE", "false"),
             timeout=timeout,
             headers=headers,

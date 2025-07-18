@@ -19,6 +19,8 @@ from opentelemetry.sdk.trace.export import (  # noqa: E402
     ConsoleSpanExporter,
     SpanExporter,
 )
+from opentelemetry.trace import NoOpTracerProvider  # noqa: E402
+from opentelemetry.trace import TracerProvider as TracerProviderProtocol  # noqa: E402
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator  # noqa: E402
 
 
@@ -30,7 +32,7 @@ def configure_tracing(
     cfg: TracingConfig,
     service_name: str,
     service_version: str,
-) -> TracerProvider:
+) -> TracerProviderProtocol:
     """Configure OpenTelemetry tracing.
 
     Args:
@@ -44,6 +46,13 @@ def configure_tracing(
     Raises:
         TracingError: If configuration is invalid.
     """
+    tracer_provider: TracerProviderProtocol
+
+    if not cfg.enabled:
+        tracer_provider = NoOpTracerProvider()
+        trace.set_tracer_provider(tracer_provider)
+        return tracer_provider
+
     resource = Resource.create(
         attributes={
             SERVICE_NAME: service_name,
