@@ -9,7 +9,7 @@ description = "A comprehensive observability library for Python applications wit
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Mykyta", email = "mykyta@example.com"},
+    {name = "Mykyta", email = "corruptmane@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -65,6 +65,7 @@ server = [
 all = [
     "corrupt-o11y[logging,otlp-all,server]",
 ]
+
 [dependency-groups]
 dev = [
     "mypy>=1.16.1",
@@ -77,10 +78,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mykyta/corrupt-o11y-py"
-Documentation = "https://github.com/mykyta/corrupt-o11y-py#readme"
-Repository = "https://github.com/mykyta/corrupt-o11y-py.git"
-"Bug Tracker" = "https://github.com/mykyta/corrupt-o11y-py/issues"
+Homepage = "https://github.com/corruptmane/corrupt-o11y-py"
+Documentation = "https://github.com/corruptmane/corrupt-o11y-py#readme"
+Repository = "https://github.com/corruptmane/corrupt-o11y-py.git"
+"Bug Tracker" = "https://github.com/corruptmane/corrupt-o11y-py/issues"
 
 [tool.hatch.version]
 path = "src/corrupt_o11y/__meta__.py"
