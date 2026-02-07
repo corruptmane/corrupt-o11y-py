@@ -204,12 +204,12 @@ class TestMetricsCollector:
         assert "http_requests" in collector._metrics
         assert counter._name == "http_requests"
 
-    def test_create_counter_with_prefix_and_unit(self):
-        """Test creating counter with prefix and unit."""
+    def test_create_counter_with_prefix(self):
+        """Test creating counter with prefix."""
         config = MetricsConfig(metric_prefix="myapp_")
         collector = MetricsCollector(config)
 
-        counter = collector.create_counter("requests", "Total requests", unit="total")
+        counter = collector.create_counter("requests", "Total requests")
 
         assert counter._name == "myapp_requests"
 

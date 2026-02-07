@@ -1,14 +1,18 @@
 import logging
 from collections.abc import Callable, Iterator
-from typing import Any, Self
+from typing import Any, Protocol, Self, TextIO
 
 import orjson
-import structlog
-from structlog.stdlib import BoundLogger
-from structlog.typing import Processor
 
-from .config import LoggingConfig
-from .processors import (
+from corrupt_o11y._internal.dependencies import check_structlog
+
+# Check for structlog availability
+check_structlog()
+import structlog  # noqa: E402
+from structlog.typing import ExcInfo, Processor  # noqa: E402
+
+from .config import LoggingConfig  # noqa: E402
+from .processors import (  # noqa: E402
     EnhancedExceptionProcessor,
     add_open_telemetry_spans,
     make_processor_chain_safe,
@@ -108,18 +112,32 @@ class ProcessorChain:
         return f"ProcessorChain({len(self._processors)} processors)"
 
 
+class ExceptionFormatter(Protocol):
+    def __call__(self, sio: TextIO, exc_info: ExcInfo) -> None: ...
+
+
 class LoggingCollector:
     """Configurable logging system with processor chains."""
 
-    def __init__(self, config: LoggingConfig, safe_processors: bool = True) -> None:
+    def __init__(
+        self,
+        config: LoggingConfig,
+        safe_processors: bool = True,
+        console_renderer_sort_keys: bool = True,
+        console_renderer_exception_formatter: ExceptionFormatter = structlog.dev.plain_traceback,
+    ) -> None:
         """Initialize the logging collector with sensible defaults.
 
         Args:
             config: Configuration for the logging system.
             safe_processors: Whether to wrap processors with error handling.
+            console_renderer_sort_keys: Whether to sort keys in the console renderer.
+            console_renderer_exception_formatter: Exception formatter for the console renderer.
         """
         self._config = config
         self._safe_processors = safe_processors
+        self._console_renderer_sort_keys = console_renderer_sort_keys
+        self._console_renderer_exception_formatter = console_renderer_exception_formatter
 
         # Early processors (enrichment - run before user pre-processing)
         early_processors: list[Processor] = [
@@ -255,7 +273,11 @@ class LoggingCollector:
         if self._config.as_json:
             final_processor = structlog.processors.JSONRenderer(serializer=self._json_serializer)
         else:
-            final_processor = structlog.dev.ConsoleRenderer(colors=self._config.colors)
+            final_processor = structlog.dev.ConsoleRenderer(
+                colors=self._config.colors,
+                sort_keys=self._console_renderer_sort_keys,
+                exception_formatter=self._console_renderer_exception_formatter,
+            )
 
         # Set up structlog processors for internal use
         structlog_processors: list[Processor] = [
@@ -292,5 +314,5 @@ class LoggingCollector:
         )
 
 
-def get_logger(name: str) -> BoundLogger:
+def get_logger(name: str) -> structlog.stdlib.BoundLogger:
     return structlog.stdlib.get_logger(name)

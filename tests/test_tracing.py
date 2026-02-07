@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from opentelemetry.trace import NoOpTracerProvider
 
 from corrupt_o11y.tracing import ExportType, TracingConfig, TracingError, configure_tracing
 
@@ -24,6 +25,7 @@ class TestTracingConfig:
 
         assert config.export_type == ExportType.STDOUT
         assert config.endpoint == ""
+        assert config.enabled is True
         assert config.insecure is False
         assert config.timeout == 30
         assert config.headers is None
@@ -34,6 +36,7 @@ class TestTracingConfig:
         config = TracingConfig(
             export_type=ExportType.HTTP,
             endpoint="http://localhost:4318/v1/traces",
+            enabled=False,
             insecure=True,
             timeout=60,
             headers=headers,
@@ -41,6 +44,7 @@ class TestTracingConfig:
 
         assert config.export_type == ExportType.HTTP
         assert config.endpoint == "http://localhost:4318/v1/traces"
+        assert config.enabled is False
         assert config.insecure is True
         assert config.timeout == 60
         assert config.headers == headers
@@ -49,6 +53,7 @@ class TestTracingConfig:
         """Test TracingConfig.from_env with default values."""
         # Clear all relevant env vars
         for var in [
+            "TRACING_ENABLED",
             "TRACING_EXPORTER_TYPE",
             "TRACING_EXPORTER_ENDPOINT",
             "TRACING_INSECURE",
@@ -60,12 +65,14 @@ class TestTracingConfig:
 
         assert config.export_type == ExportType.STDOUT
         assert config.endpoint == ""
+        assert config.enabled is True
         assert config.insecure is False
         assert config.timeout == 30
         assert config.headers is None
 
     def test_from_env_custom(self, monkeypatch):
         """Test TracingConfig.from_env with custom values."""
+        monkeypatch.setenv("TRACING_ENABLED", "false")
         monkeypatch.setenv("TRACING_EXPORTER_TYPE", "http")
         monkeypatch.setenv("TRACING_EXPORTER_ENDPOINT", "http://jaeger:14268/api/traces")
         monkeypatch.setenv("TRACING_INSECURE", "true")
@@ -76,6 +83,7 @@ class TestTracingConfig:
 
         assert config.export_type == ExportType.HTTP
         assert config.endpoint == "http://jaeger:14268/api/traces"
+        assert config.enabled is False
         assert config.insecure is True
         assert config.timeout == 120
         assert config.headers == headers
@@ -135,7 +143,7 @@ class TestConfigureTracing:
 
     @patch("corrupt_o11y.tracing.tracer.trace.set_tracer_provider")
     @patch("corrupt_o11y.tracing.tracer.Resource")
-    @patch("corrupt_o11y.tracing.tracer.OTLPHttpExporter")
+    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.OTLPSpanExporter")
     def test_configure_http_tracing(
         self, mock_http_exporter, mock_resource, mock_set_tracer_provider
     ):
@@ -161,7 +169,7 @@ class TestConfigureTracing:
 
     @patch("corrupt_o11y.tracing.tracer.trace.set_tracer_provider")
     @patch("corrupt_o11y.tracing.tracer.Resource")
-    @patch("corrupt_o11y.tracing.tracer.OTLPGrpcExporter")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter")
     def test_configure_grpc_tracing(
         self, mock_grpc_exporter, mock_resource, mock_set_tracer_provider
     ):
@@ -251,3 +259,39 @@ class TestConfigureTracing:
 
         # Verify tracer provider was set globally
         mock_set_tracer_provider.assert_called_once_with(mock_tracer_provider)
+
+    @patch("corrupt_o11y.tracing.tracer.trace.set_tracer_provider")
+    def test_configure_tracing_disabled(self, mock_set_tracer_provider):
+        """Test configuring tracing when disabled returns NoOpTracerProvider."""
+        config = TracingConfig(export_type=ExportType.STDOUT, endpoint="", enabled=False)
+
+        result = configure_tracing(config, "test-service", "1.0.0")
+
+        # Verify NoOpTracerProvider was returned
+        assert isinstance(result, NoOpTracerProvider)
+
+        # Verify tracer provider was set globally
+        mock_set_tracer_provider.assert_called_once_with(result)
+
+    def test_from_env_tracing_enabled_true(self, monkeypatch):
+        """Test TracingConfig.from_env with TRACING_ENABLED=true."""
+        monkeypatch.setenv("TRACING_ENABLED", "true")
+
+        config = TracingConfig.from_env()
+
+        assert config.enabled is True
+
+    def test_from_env_tracing_enabled_false(self, monkeypatch):
+        """Test TracingConfig.from_env with TRACING_ENABLED=false."""
+        monkeypatch.setenv("TRACING_ENABLED", "false")
+
+        config = TracingConfig.from_env()
+
+        assert config.enabled is False
+
+    def test_from_env_tracing_enabled_invalid(self, monkeypatch):
+        """Test TracingConfig.from_env with invalid TRACING_ENABLED value."""
+        monkeypatch.setenv("TRACING_ENABLED", "maybe")
+
+        with pytest.raises(ValueError, match="Invalid boolean value for TRACING_ENABLED"):
+            TracingConfig.from_env()

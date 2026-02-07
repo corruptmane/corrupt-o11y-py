@@ -1,7 +1,8 @@
 # corrupt o11y
 
 [![CI](https://github.com/corruptmane/corrupt-o11y-py/actions/workflows/ci.yml/badge.svg)](https://github.com/corruptmane/corrupt-o11y-py/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/mykyta/corrupt-o11y-py/branch/main/graph/badge.svg)](https://codecov.io/gh/mykyta/corrupt-o11y-py)
+[![codecov](https://codecov.io/github/corruptmane/corrupt-o11y-py/branch/dev/graph/badge.svg?token=IO92GT0TEH)](https://codecov.io/github/corruptmane/corrupt-o11y-py)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 
@@ -68,6 +69,7 @@ All components are configured via environment variables:
 - `LOG_TRACING` - Include trace information (default: false)
 
 ### Tracing
+- `TRACING_ENABLED` - Enable tracing (default: true)
 - `TRACING_EXPORTER_TYPE` - Exporter type: stdout, http, grpc (default: stdout)
 - `TRACING_EXPORTER_ENDPOINT` - OTLP endpoint URL (required for http/grpc)
 - `TRACING_INSECURE` - Use insecure connection (default: false)
@@ -160,14 +162,39 @@ request_counter.labels(method="GET", endpoint="/api/users", status="200").inc()
 
 ## Installation
 
+### Basic Installation (Metrics Only)
+
 ```bash
 # With uv (recommended)
 uv add corrupt-o11y
-```
 
-```bash
 # With pip
 pip install corrupt-o11y
+```
+
+### With Optional Features
+
+```bash
+# Structured logging support
+uv add "corrupt-o11y[logging]"
+pip install "corrupt-o11y[logging]"
+
+# OpenTelemetry tracing support
+uv add "corrupt-o11y[otlp]"
+pip install "corrupt-o11y[otlp]"
+
+# OTLP exporters for tracing
+uv add "corrupt-o11y[otlp-http,otlp-grpc]"
+# or
+pip install "corrupt-o11y[otlp-http,otlp-grpc]"
+
+# HTTP operational server
+uv add "corrupt-o11y[server]"
+pip install "corrupt-o11y[server]"
+
+# All features
+uv add "corrupt-o11y[all]"
+pip install "corrupt-o11y[all]"
 ```
 
 ## Development
@@ -175,8 +202,8 @@ pip install corrupt-o11y
 For contributors (using [uv](https://docs.astral.sh/uv/) as recommended package manager):
 
 ```bash
-# Install with development dependencies
-uv sync --dev
+# Install with development dependencies and all optional features
+uv sync --dev --all-extras
 
 # Install pre-commit hooks
 uv run pre-commit install
