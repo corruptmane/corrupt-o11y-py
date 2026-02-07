@@ -1,13 +1,13 @@
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Self
 
 from corrupt_o11y._internal import env_bool
 
 
-class ExportType(str, Enum):
+class ExportType(StrEnum):
     """Supported OpenTelemetry exporter types."""
 
     STDOUT = "stdout"
