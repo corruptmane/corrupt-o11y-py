@@ -102,7 +102,7 @@ class EnhancedExceptionProcessor:
 
         return location_info
 
-    def __call__(
+    def __call__(  # noqa: PLR0912
         self,
         logger: WrappedLogger,  # noqa: ARG002
         method_name: str,  # noqa: ARG002
@@ -115,6 +115,8 @@ class EnhancedExceptionProcessor:
         exc_info = event_dict["exc_info"]
         if exc_info is True:
             exc_info = sys.exc_info()
+        elif isinstance(exc_info, BaseException):
+            exc_info = (type(exc_info), exc_info, exc_info.__traceback__)
 
         if not exc_info or not exc_info[0]:
             return event_dict
